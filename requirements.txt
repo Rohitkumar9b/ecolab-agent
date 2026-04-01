@@ -6,3 +6,5 @@ faiss-cpu
 python-dotenv
 langgraph
 langchain-openai
+databricks-sql-connector
+pyarrow

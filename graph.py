@@ -7,13 +7,21 @@ db_agent = databricks_agent()
 vec_agent = vector_agent()
 
 
-def orchestrator(state: AgentState):
-    query = state["query"]
+# def orchestrator(state: AgentState):
+#     query = state["query"]
 
-    if "sql" in query.lower():
+#     if "sql" in query.lower():
+#         return {**state, "next_agent": "databricks"}
+#     return {**state, "next_agent": "vector"}
+
+def orchestrator(state):
+    query = state["query"].lower()
+
+    # smarter routing
+    if any(word in query for word in ["sql", "database", "table", "users", "select", "get"]):
         return {**state, "next_agent": "databricks"}
-    return {**state, "next_agent": "vector"}
 
+    return {**state, "next_agent": "vector"}
 
 def databricks_node(state: AgentState):
     response = db_agent(state["query"])

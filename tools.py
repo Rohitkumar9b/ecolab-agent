@@ -1,44 +1,8 @@
-# from langchain.tools import tool
-
-
-# # @tool
-# # def sql_query_tool(query: str):
-# #     """
-# #     Execute a SQL query on Databricks and return results.
-# #     """
-# #     return f"Executed SQL query on Databricks: {query}"
-
-
-# # @tool
-# # def vector_search_tool(query: str):
-# #     """
-# #     Perform semantic search and return relevant documents.
-# #     """
-# #     return f"Top documents related to: {query}"
-
-# from langchain.tools import tool
-# from langchain_openai import ChatOpenAI
-
-# llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
-
-# @tool
-# def sql_query_tool(query: str):
-#     """
-#     Convert natural language to SQL and simulate execution.
-#     """
-#     return f"[SIMULATED DB RESULT] Query executed: {query}"
-
-# @tool
-# def vector_search_tool(query: str):
-#     """
-#     Perform semantic search and return AI-generated answer.
-#     """
-#     response = llm.invoke(query)
-#     return response.content
-
+#tools.py
 
 from langchain.tools import tool
 from langchain_openai import ChatOpenAI
+from databricks import sql
 
 import os
 from dotenv import load_dotenv
@@ -67,33 +31,54 @@ def vector_search_tool(query: str):
     response = llm.invoke(prompt)
     return response.content
 
-
 @tool
 def sql_query_tool(query: str):
     """
-    Convert natural language into SQL and simulate database response.
+    Convert natural language to SQL and execute on Databricks.
     """
 
-    # Step 1: Convert to SQL
+    # Step 1: Convert NL → SQL
     sql_prompt = f"""
-    Convert the following natural language query into SQL:
+        You are a SQL expert.
 
-    Query: {query}
+        Database: demo_db
+        Table: demo_db.users(id, name, age)
 
-    Only return SQL query.
-    """
+        Convert the user query into SQL.
+
+        Rules:
+        - ALWAYS use full table name: demo_db.users
+        - Only return SQL
+        - No explanation
+
+        User Query: {query}
+
+        SQL:
+        """
 
     sql_response = llm.invoke(sql_prompt)
-    sql_query = sql_response.content
+    sql_query = sql_response.content.strip().replace("```sql", "").replace("```", "")
 
-    # Step 2: Simulate execution (since no DB connected)
-    result = f"""
-    Generated SQL:
-    {sql_query}
+    # Step 2: Execute on Databricks
+    try:
+        with sql.connect(
+            server_hostname=os.getenv("DATABRICKS_HOST").replace("https://", "").replace("/", ""),
+            http_path=os.getenv("DATABRICKS_HTTP_PATH"),
+            access_token=os.getenv("DATABRICKS_TOKEN"),
+        ) as connection:
 
-    [SIMULATED RESULT]
-    - Row 1: Sample Data
-    - Row 2: Sample Data
-    """
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query)
+                result = cursor.fetchall()
 
-    return result
+        return f"""
+        Generated SQL:
+        {sql_query}
+
+        Result:
+        {result}
+        """
+
+    except Exception as e:
+        return f"Error executing query: {str(e)}"
+
