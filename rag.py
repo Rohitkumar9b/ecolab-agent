@@ -1,5 +1,5 @@
 import os
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -8,9 +8,17 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 DATA_PATH = "documents"
 INDEX_PATH = "faiss_index"
 
-embedding = OpenAIEmbeddings()
+# embedding = OpenAIEmbeddings()
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
 
+
+# ✅ ADD
+from langchain_community.embeddings import HuggingFaceEmbeddings
+
+# replace embedding
+embedding = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
 
 def load_documents():
     docs = []
