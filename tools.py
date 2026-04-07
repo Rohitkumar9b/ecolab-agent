@@ -17,19 +17,28 @@ llm = ChatOpenAI(
 )
 
 
+from rag import rag_query
+
 @tool
 def vector_search_tool(query: str):
     """
-    Answer general user questions using AI (acts like a chatbot / knowledge assistant).
+    Perform RAG-based semantic search using documents.
     """
-    prompt = f"""
-    You are an intelligent assistant. Answer the user's question clearly and concisely.
+    return rag_query(query)
 
-    Question: {query}
-    """
+# @tool
+# def vector_search_tool(query: str):
+#     """
+#     Answer general user questions using AI (acts like a chatbot / knowledge assistant).
+#     """
+#     prompt = f"""
+#     You are an intelligent assistant. Answer the user's question clearly and concisely.
 
-    response = llm.invoke(prompt)
-    return response.content
+#     Question: {query}
+#     """
+
+#     response = llm.invoke(prompt)
+#     return response.content
 
 @tool
 def sql_query_tool(query: str):

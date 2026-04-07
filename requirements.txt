@@ -8,3 +8,6 @@ langgraph
 langchain-openai
 databricks-sql-connector
 pyarrow
+langchain_community
+pypdf
+langchain_text_splitters
